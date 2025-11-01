@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>沈妍君生日快乐呀！</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: #000;
+            overflow: hidden;
+            font-family: "Microsoft YaHei", sans-serif;
+            height: 100vh;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .danmu-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+        }
+        
+        .danmu {
+            position: absolute;
+            white-space: nowrap;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+            animation: move linear forwards;
+        }
+        
+        @keyframes move {
+            from {
+                transform: translateX(100vw);
+            }
+            to {
+                transform: translateX(-100%);
+            }
+        }
+        
+        .birthday-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 42px;
+            text-align: center;
+            z-index: 3;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px 40px;
+            border-radius: 10px;
+            animation: pulse 2s infinite;
+        }
+        
+        .birthday-text span {
+            display: inline-block;
+            animation: colorChange 3s infinite alternate;
+        }
+        
+        /* 每个字的颜色动画延迟不同 */
+        .birthday-text span:nth-child(1) { animation-delay: 0s; }
+        .birthday-text span:nth-child(2) { animation-delay: 0.2s; }
+        .birthday-text span:nth-child(3) { animation-delay: 0.4s; }
+        .birthday-text span:nth-child(4) { animation-delay: 0.6s; }
+        .birthday-text span:nth-child(5) { animation-delay: 0.8s; }
+        .birthday-text span:nth-child(6) { animation-delay: 1.0s; }
+        .birthday-text span:nth-child(7) { animation-delay: 1.2s; }
+        .birthday-text span:nth-child(8) { animation-delay: 1.4s; }
+        .birthday-text span:nth-child(9) { animation-delay: 1.6s; }
+        
+        @keyframes colorChange {
+            0% { color: #FF6B6B; }
+            20% { color: #4ECDC4; }
+            40% { color: #FFD166; }
+            60% { color: #06D6A0; }
+            80% { color: #118AB2; }
+            100% { color: #EF476F; }
+        }
+        
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.05); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+        
+        .instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 16px;
+            z-index: 3;
+        }
+        
+        .music-control {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 5px;
+            z-index: 10;
+            color: #333;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .music-control:hover {
+            background: rgba(255, 255, 255, 1);
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            color: white;
+            font-size: 24px;
+            flex-direction: column;
+        }
+        
+        .loading-overlay.hidden {
+            display: none;
+        }
+        
+        .start-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: #FF6B6B;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .start-button:hover {
+            background: #FF5252;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div>沈妍君生日快乐！</div>
+        <button class="start-button" id="startButton">点击开始</button>
+    </div>
+    
+    <canvas id="canvas"></canvas>
+    <div class="danmu-container" id="danmuContainer"></div>
+    <div class="birthday-text">
+        <span>沈</span>
+        <span>妍</span>
+        <span>君</span>
+        <span>生</span>
+        <span>日</span>
+        <span>快</span>
+        <span>乐</span>
+        <span>呀</span>
+        <span>！</span>
+    </div>
+    <div class="instructions">点击屏幕任意位置生成彩色烟花</div>
+    <div class="music-control" id="musicControl">点击暂停音乐</div>
+    
+    <!-- 音频元素 - 使用本地音乐文件 -->
+    <audio id="bgMusic" loop>
+        <!-- 默认使用happy.mp3文件 -->
+        <source src="happy.mp3" type="audio/mpeg">
+        您的浏览器不支持音频元素。
+    </audio>
+    
+    <script>
+        // 弹幕内容
+        const danmuTexts = [
+            "沈妍君生日快乐呀～",
+            "天天开心哦",
+            "天冷了多穿衣",
+            "记得按时吃饭",
+            "照顾好自己哟",
+            "累了就歇一歇",
+            "平安喜乐是最重要",
+            "不要给自己太大压力",
+            "保持好心态",
+            "期待下一次见面",
+            "好好爱自己",
+            "未来顺顺利利"
+        ];
+        
+        // 颜色数组
+        const colors = [
+            '#FF6B6B', '#4ECDC4', '#FFD166', '#06D6A0', 
+            '#118AB2', '#EF476F', '#FF9E6D', '#A05195',
+            '#D45087', '#F95D6A', '#FF7C43', '#665191'
+        ];
+        
+        // 获取DOM元素
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const danmuContainer = document.getElementById('danmuContainer');
+        const bgMusic = document.getElementById('bgMusic');
+        const musicControl = document.getElementById('musicControl');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const startButton = document.getElementById('startButton');
+        
+        // 设置canvas尺寸
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        // 初始化
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // 播放音效函数
+        function playSound(filename) {
+            const audio = new Audio(filename);
+            audio.play().catch(e => {
+                console.log("音效播放失败:", e);
+            });
+        }
+        
+        // 烟花粒子类
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.radius = Math.random() * 2 + 1;
+                this.speed = Math.random() * 3 + 2;
+                this.angle = Math.random() * Math.PI * 2;
+                this.vx = Math.cos(this.angle) * this.speed;
+                this.vy = Math.sin(this.angle) * this.speed;
+                this.alpha = 1;
+                this.decay = Math.random() * 0.015 + 0.01;
+            }
+            
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.05; // 重力
+                this.alpha -= this.decay;
+                
+                return this.alpha > 0;
+            }
+            
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+        
+        // 烟花类
+        class Firework {
+            constructor(x, y, soundType) {
+                this.x = x;
+                this.y = y;
+                this.particles = [];
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+                
+                // 创建粒子
+                for (let i = 0; i < 100; i++) {
+                    this.particles.push(new Particle(this.x, this.y, this.color));
+                }
+                
+                // 播放烟花音效
+                if (soundType === 'click') {
+                    playSound('1boom.mp3');
+                } else if (soundType === 'auto') {
+                    playSound('3boom.mp3');
+                }
+            }
+            
+            update() {
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    if (!this.particles[i].update()) {
+                        this.particles.splice(i, 1);
+                    }
+                }
+                
+                return this.particles.length > 0;
+            }
+            
+            draw() {
+                this.particles.forEach(particle => particle.draw());
+            }
+        }
+        
+        // 烟花数组
+        let fireworks = [];
+        
+        // 动画循环
+        function animate() {
+            // 清除画布
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 更新和绘制烟花
+            for (let i = fireworks.length - 1; i >= 0; i--) {
+                if (!fireworks[i].update()) {
+                    fireworks.splice(i, 1);
+                } else {
+                    fireworks[i].draw();
+                }
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // 开始动画
+        animate();
+        
+        // 点击生成烟花
+        canvas.addEventListener('click', (e) => {
+            fireworks.push(new Firework(e.clientX, e.clientY, 'click'));
+        });
+        
+        // 自动生成多个烟花
+        function createAutoFireworks() {
+            for (let i = 0; i < 3; i++) {
+                const x = Math.random() * (window.innerWidth - 100) + 50;
+                const y = Math.random() * (window.innerHeight - 100) + 50;
+                fireworks.push(new Firework(x, y, 'auto'));
+            }
+        }
+        
+        // 每3秒自动生成3个烟花
+        let autoFireworkInterval;
+        
+        // 创建弹幕
+        function createDanmu() {
+            const text = danmuTexts[Math.floor(Math.random() * danmuTexts.length)];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            const top = Math.random() * (window.innerHeight - 50) + 25;
+            const duration = Math.random() * 10 + 10; // 10-20秒
+            const fontSize = Math.random() * 10 + 20; // 20-30px
+            const delay = Math.random() * 5; // 0-5秒延迟
+            
+            const danmu = document.createElement('div');
+            danmu.className = 'danmu';
+            danmu.textContent = text;
+            danmu.style.color = color;
+            danmu.style.top = `${top}px`;
+            danmu.style.animationDuration = `${duration}s`;
+            danmu.style.animationDelay = `${delay}s`;
+            danmu.style.fontSize = `${fontSize}px`;
+            
+            danmuContainer.appendChild(danmu);
+            
+            // 动画结束后移除元素
+            setTimeout(() => {
+                danmu.remove();
+            }, (duration + delay) * 1000);
+        }
+        
+        // 持续生成弹幕
+        let danmuInterval;
+        
+        // 音乐控制
+        let isPlaying = true;
+        
+        musicControl.addEventListener('click', () => {
+            if (isPlaying) {
+                bgMusic.pause();
+                musicControl.textContent = '点击播放音乐';
+            } else {
+                bgMusic.play();
+                musicControl.textContent = '点击暂停音乐';
+            }
+            isPlaying = !isPlaying;
+        });
+        
+        // 开始体验函数
+        function startExperience() {
+            // 隐藏加载覆盖层
+            loadingOverlay.classList.add('hidden');
+            
+            // 尝试播放背景音乐
+            bgMusic.play().then(() => {
+                console.log("背景音乐开始播放");
+                isPlaying = true;
+                musicControl.textContent = '点击暂停音乐';
+            }).catch(e => {
+                console.log("自动播放被阻止:", e);
+                musicControl.textContent = '点击播放音乐';
+                isPlaying = false;
+            });
+            
+            // 开始自动烟花
+            autoFireworkInterval = setInterval(createAutoFireworks, 3000);
+            
+            // 开始弹幕
+            danmuInterval = setInterval(createDanmu, 1000);
+        }
+        
+        // 页面加载后显示开始界面
+        window.addEventListener('load', () => {
+            // 预加载音效
+            const clickSound = new Audio('1boom.mp3');
+            const autoSound = new Audio('3boom.mp3');
+            
+            // 点击开始按钮开始体验
+            startButton.addEventListener('click', startExperience);
+            
+            // 也允许点击页面其他地方开始
+            loadingOverlay.addEventListener('click', startExperience);
+        });
+    </script>
+</body>
+</html>
